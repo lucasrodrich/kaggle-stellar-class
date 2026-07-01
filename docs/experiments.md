@@ -105,12 +105,38 @@ luck, a principled CV-vs-LB distinction, and the willingness to run the highest-
 idea (external data) and **report that it failed**. Knowing what *doesn't* work, and
 why, is the harder and more valuable half of the job.
 
-### On the ~0.970 leader cluster
+### What the leaders actually did — and where my conclusion was too strong
 
-The obvious external-data routes have now been tested and rejected: augmentation (Tier
-2, null on the leaderboard) and nearest-neighbour label lookup (Tier 3, falsified
-offline). The generator did not memorise the real data, so there is no simple
-real-label leak to exploit. Whatever separates the top of the board from ~0.957 is not
-one of the standard tabular levers tried here — and chasing it further would be
-guessing, not reasoning. The disciplined stopping point is the verified baseline plus a
-complete, honest record of what did not work and why.
+I originally concluded "~0.957 is the ceiling; blending doesn't help; concept drift caps
+it." **Reading the top public notebooks proved that partly wrong**, and the honest
+correction matters more than the original claim.
+
+The most-upvoted solutions (Chris Deotte's *GPU Logistic Regression Stacker*, Philipp
+Singer's *TabPFN-3 Stacker*, and many *ensemble* / *ridge-flip* / *probability
+consensus* notebooks — both authors are Kaggle Grandmasters) reveal that the ~0.97
+cluster comes from three things this project did **not** do:
+
+1. **Real model diversity.** Our blend was LightGBM + XGBoost — both gradient-boosted
+   trees, ~99.5% correlated, so averaging them did nothing. The leaders add
+   *fundamentally different* learners, notably **TabPFN** (a transformer-based tabular
+   foundation model) that errs differently from trees. Diversity is what makes a blend
+   work; we didn't have it.
+2. **Stacking, not simple averaging.** They train a **meta-model** (logistic regression)
+   on the out-of-fold predictions of many base models, learning the optimal per-class
+   combination — far stronger than a fixed 0.7/0.3 weight.
+3. **Post-processing** ("ridge-flip / probability consensus") that flips borderline
+   predictions by model agreement.
+
+So two of my earlier statements need correcting:
+
+- *"Blending doesn't help"* → should be *"blending near-identical GBMs doesn't help."*
+  Diverse stacking clearly does.
+- *"0.957 is the ceiling"* → wrong. The leaders reach 0.973, which is **above even our
+  optimistic CV of 0.968**, so there is real signal we left on the table. Part of our
+  CV→LB gap was genuine concept drift; part was a single deep GBM **overfitting
+  synthetic-specific noise** that a diverse, regularised stack avoids.
+
+The concept-drift *diagnosis* stands (it is real and measured), but calling it an
+immovable ceiling was an overreach. Fittingly, the project's own lesson — *never trust a
+result you haven't stress-tested* — caught my **own** conclusion once we looked at the
+leaderboard. A stacking attempt at closing this gap is logged in Tier 4 below.
