@@ -124,6 +124,15 @@ A final CV lesson: the 5-model *subsample* CV read 0.9699 while the leaderboard 
 judges. This is a hardware ceiling, honestly hit: the method was reproduced, the compute
 was not.
 
+**GPU re-run (T4, 16k context).** To rule out the CPU handicap, the stack was rebuilt on
+a Kaggle T4 GPU where TabPFN could use a 16k-row context instead of 5k. TabPFN alone
+improved (0.952 → **0.9565**), confirming more context helps — but the full stack still
+scored **public 0.95410 / private 0.95483**, *below* the baseline and even a hair below
+the CPU stack. So even the technique done "right" on a GPU loses here: 16k of 577k rows
+(~3%) still isn't enough context for TabPFN to beat the GBMs, and a free T4's 15GB caps
+how far the context can grow. The leaders' larger contexts / more ensemble members need
+compute beyond free-tier hardware. The runnable GPU notebook is `notebooks/gpu_stack.ipynb`.
+
 ## Conclusion
 
 Across engineered features, target encoding, feature pruning, hyperparameter tuning,
