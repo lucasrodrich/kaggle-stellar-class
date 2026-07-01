@@ -4,3 +4,8 @@ scikit-learn
 lightgbm==4.6.0
 xgboost==3.3.0
 catboost==1.2.10
+
+# Optional — only for the TabPFN base model in src/stack_tabpfn.py.
+# Large (pulls PyTorch); weights download from a public HuggingFace repo and run locally.
+# tabpfn
+# huggingface-hub
